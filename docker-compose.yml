@@ -1,0 +1,27 @@
+services:
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      - WEBUI_PORT=${WEBUI_PORT}
+      - TORRENTING_PORT=${TORRENT_PORT}
+      - DOCKER_MODS=ghcr.io/vuetorrent/vuetorrent-lsio-mod:latest
+    volumes:
+      - ./appdata:/config
+      - ./downloads:/downloads
+    ports:
+      - ${WEBUI_PORT}:${WEBUI_PORT}
+      - ${TORRENT_PORT}:6881
+      - ${TORRENT_PORT}:6881/udp
+    restart: unless-stopped
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    restart: on-failure:5
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    command: tunnel --no-autoupdate run
+    depends_on:
+      - qbittorrent
+
